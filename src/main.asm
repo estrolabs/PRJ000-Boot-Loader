@@ -58,6 +58,8 @@ FileInfoBufferSize dq 256
 ; kernel file size
 KernelSize dq 0
 
+boot_msg: dw 'B','O','O','T','L','O','A','D','E','R',' ','O','K',13,10,0
+
 ; Section text just means this section of assembly code will be loaded into the text section of memory.
 ; Code is loaded into memory and executed instructio by instruction to us its line by line but in memory its just a long list of data.
 section .text
@@ -231,9 +233,12 @@ efi_main:
     add rsp, 32
 
     ; ====== STEP 08 - Jump into the file and execute the code ======
+    
+    ; pass SystemTable to kernel in RDI TEMPORARY CODE
+    mov rdi, rbx
 
     mov rax, [KernelBuffer]
-    jmp rax
+    ; jmp rax
 
     ; rax is the 64 bit return value register in the x86_64 calling convention used by UEFI.
     ; UEFI expects your entry function to return an EFI_STATUS.
@@ -243,16 +248,14 @@ efi_main:
     ; This line of code is the standard fastest way to set a register to 0
     ; This line of code basically says use rax as the return to UEFI register and return 0 which is success.
     ; But this line does not actually return it just puts success (0) in the rax register which is used by UEFI for return values.
-    ; xor rax, rax
-    ; Restore the original rbx value
-    ; pop rbx
+    xor rax, rax
     ; returns from the current function to the caller.
     ; In this case the caller is UEFI firmware - specifically the UEFI loader that invoked your application entry.
     ; It uses the return address taht was pushed on the stack when UEFI called efi_main.
     ; Since rax is already 0, the firmware recieves EFI_SUCCESS
     ; using ret just says return which means it returns the value in rax to the caller which is UEFI firmware loader.
-    ; ret
+    ret
 
-.hang:
-    jmp .hang
+; .hang:
+;     jmp .hang
     
