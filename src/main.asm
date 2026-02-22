@@ -28,33 +28,7 @@ section .text
 
 ; Entry Point efi_main is what first runs when we run our executable program.
 efi_main:
-    ; Stores the old rbx on the stack
-    push rbx
-    ; Obtain console output interface so we can call OutputString.
-    ; rdx = pointer to EFI_SYSTEM_TABLE.
-    ; +64 bytes = the ConOut field inside that struct (on x64) - basically the offset to where the ConOut is located.
-    ; tbx becomes SystemTable->ConOut - a pointer to the console output protocol.
-    mov rbx, [rdx + 64]
-
-    ; rbx currently points to the EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL object (ConOut).
-    ; The first field in that object is a function pointer called reset.
-    ; The second field is OutputString.
-    ; So OutputString is at offset +8 from the start of the protocol struct (8 byte pointers on x64)
-    mov rax, [rbx + 8]
-
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov rcx, rbx
-    ; arg2 = &msg (char16*)
-    ; Loafs the address of message (not the contents)
-    lea rdx, [msg]
-    ; Rserve 32 bytes (required by UEFI x64 calling convention)
-    sub rsp, 32
-    ; OutputString(ConOut, msg)
-    ; Calls the function pointer
-    call rax
-    ; Restore stack
-    add rsp, 32
+    
 
     ; rax is the 64 bit return value register in the x86_64 calling convention used by UEFI.
     ; UEFI expects your entry function to return an EFI_STATUS.
