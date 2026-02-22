@@ -40,7 +40,7 @@ LoadedImageGUID:
     db 0x8E,0x3F,0x00,0xA0,0xC9,0x69,0x72,0x3B
 
 SimpleFileSystemGUID:
-    dd 0x0964E5B2
+    dd 0x964E5B22
     dw 0x6459
     dw 0x11D2
     db 0x8E,0x39,0x00,0xA0,0xC9,0x69,0x72,0x3B
@@ -70,7 +70,7 @@ section .text
 
 ; Entry Point efi_main is what first runs when we run our executable program.
 efi_main:
-    
+    sub rsp, 28
     ; ====== Store Important Data ======
     ; r13 = ImageHandle
     mov r13, rcx
@@ -86,21 +86,6 @@ efi_main:
 
     ; ====== STEP 01 - Find out which device my kernel.bin file is - HandleProtocol ======
     ; I can do this via the boot services pointer
-
-    
-     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
-    ; Print BOOTLOADER OK
-    mov rcx, [rbx + 64]        ; ConOut
-    mov rax, [rcx + 8]        ; OutputString
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov r10, rcx
-    lea rdx, [boot_msg]          ; UTF-16 string
-
-    sub rsp, 32
-    call rax
-    add rsp, 32
-    ; -------------------------------------------------------------------------------------------------------------
     
     ; Function Call
 
@@ -115,11 +100,11 @@ efi_main:
     lea r8, [LoadedImageProtocol]
 
     ; Add 32 bytes shadow space
-    sub rsp, 0x28
+    sub rsp, 0x20
     ; Calls HandleProtocol function
     call rax
     ; Remove 32 bytes shadow space
-    add rsp, 0x28
+    add rsp, 0x20
 
     ; r14 = LoadedImageProtocol
     mov r14, [LoadedImageProtocol]
@@ -134,6 +119,9 @@ efi_main:
     ; - open files
     ; - read files
 
+    ; Loads HandleProtocol function pointer into rax
+    mov rax, [r12 + 0x98]
+
     ; rcx = DeviceInstance/DeviceHandle
     mov rcx, r15
     ; Load address of GUID
@@ -141,15 +129,43 @@ efi_main:
     ; Load address of result data variable
     lea r8, [SimpleFileSystemProtocol]
 
+    
     ; Add 32 bytes of shadow space
-    sub rsp, 0x28
+    sub rsp, 0x20
     ; Call HandleProtocol Function
     call rax
     ; Remove 32 bytes shadow space
-    add rsp, 0x28
+    add rsp, 0x20
+    ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
 
+    sub rsp, 0x20
+    call rax
+    add rsp, 0x20
+    ; -------------------------------------------------------------------------------------------------------------
+    
     ; r14 = contents of SimpleFileSystemProtocol
     mov r14, [SimpleFileSystemProtocol]
+
+    ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 0x20
+    call rax
+    add rsp, 0x20
+    ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 03 - Give me the Root Directory - Open Volume ======
 
@@ -161,11 +177,11 @@ efi_main:
     lea rdx, [RootDirectory]
 
     ; Add Shadow Space
-    sub rsp, 32
+    sub rsp, 0x20
     ; Call Function OpenVolume()
     call rax
     ; Remove Shadow Space
-    add rsp, 32
+    add rsp, 0x20
 
     ; r14 = contents of RootDirectory
     mov r14, [RootDirectory]
@@ -185,13 +201,13 @@ efi_main:
     mov r9, 1
 
     ; Add Shadow Space
-    sub rsp, 40
+    sub rsp, 0x28
     ; ARG 5 - Attributes - passed through the stack
     mov qword [rsp + 32], 0
     ; Call open() function
     call rax
     ; Remove shadow spacing
-    add rsp, 40
+    add rsp, 0x28
 
     ; Load the file protocol pointer (this is the opened kernel.bin handle)
     mov r14, [KernelFile]
@@ -206,9 +222,9 @@ efi_main:
     mov r10, rcx
     lea rdx, [boot_msg]          ; UTF-16 string
 
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
     ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 05 - Get File Info ======
@@ -222,9 +238,9 @@ efi_main:
     lea r9, [FileInfoBuffer]
 
     ; Function Call Convention
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
 
     ; Loading kernel file size into rax
     mov rax, [FileInfoBuffer + 0x30]
@@ -241,9 +257,9 @@ efi_main:
     mov r10, rcx
     lea rdx, [boot_msg]          ; UTF-16 string
 
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
     ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 06 - Allocate Memory for kernel.bin ======
@@ -258,9 +274,9 @@ efi_main:
     lea r8, [KernelBuffer]
 
     ; Function Calling Convention
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
 
 
      ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
@@ -272,9 +288,9 @@ efi_main:
     mov r10, rcx
     lea rdx, [boot_msg]          ; UTF-16 string
 
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
     ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 07 - Read bytes from the file into memory ======
@@ -291,9 +307,9 @@ efi_main:
     mov r8, [KernelBuffer]
 
     ; Function Calling Convetion
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
 
      ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
     ; Print BOOTLOADER OK
@@ -304,9 +320,9 @@ efi_main:
     mov r10, rcx
     lea rdx, [boot_msg]          ; UTF-16 string
 
-    sub rsp, 32
+    sub rsp, 0x20
     call rax
-    add rsp, 32
+    add rsp, 0x20
     ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 08 - Jump into the file and execute the code ======
@@ -315,6 +331,7 @@ efi_main:
     mov rdi, rbx
 
     mov rax, [KernelBuffer]
+    add rsp, 0x28
     jmp rax
 
     ; rax is the 64 bit return value register in the x86_64 calling convention used by UEFI.
