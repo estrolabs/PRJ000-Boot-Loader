@@ -48,9 +48,13 @@ efi_main:
     ; arg2 = &msg (char16*)
     ; Loafs the address of message (not the contents)
     lea rdx, [msg]
+    ; Rserve 32 bytes (required by UEFI x64 calling convention)
+    sub rsp, 32
     ; OutputString(ConOut, msg)
     ; Calls the function pointer
     call rax
+    ; Restore stack
+    add rsp, 32
 
     ; rax is the 64 bit return value register in the x86_64 calling convention used by UEFI.
     ; UEFI expects your entry function to return an EFI_STATUS.
