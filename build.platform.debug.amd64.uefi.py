@@ -80,7 +80,7 @@ def main() -> int:
     # 2) Copy kernel.bin into ESP root
     # ----------------------------
     esp_root = os.path.abspath(os.path.join(efi_dir, "..", "..", ".."))
-    dst_kernel_bin = os.path.join(esp_root, "kernel.bin")
+    dst_kernel_bin = os.path.join(esp_root, "esp", "kernel.bin")
 
     shutil.copy2(kernel_bin, dst_kernel_bin)
     print("Copied kernel:", dst_kernel_bin)

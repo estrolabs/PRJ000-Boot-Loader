@@ -64,6 +64,12 @@ test_ptr dq 0
 msg_bs_ok:  dw 'B','S',' ','O','K',13,10,0
 msg_bs_bad: dw 'B','S',' ','B','A','D',13,10,0
 
+open_ok:
+    dw 'O','P','E','N',' ','O','K',13,10,0
+
+open_fail:
+    dw 'O','P','E','N',' ','F','A','I','L',13,10,0
+
 ; Section text just means this section of assembly code will be loaded into the text section of memory.
 ; Code is loaded into memory and executed instructio by instruction to us its line by line but in memory its just a long list of data.
 section .text
@@ -176,12 +182,12 @@ efi_main:
     ; Add Shadow Space
     sub rsp, 0x28
     ; ARG 5 - Attributes - passed through the stack
-    mov qword [rsp + 32], 0
+    mov qword [rsp + 0x20], 0
     ; Call open() function
     call rax
     ; Remove shadow spacing
     add rsp, 0x28
-
+    
     ; Load the file protocol pointer (this is the opened kernel.bin handle)
     mov r14, [KernelFile]
 
@@ -325,4 +331,29 @@ efi_main:
 
 .hang:
     jmp .hang
+
+open_s:
+; ---------- OPEN SUCCESS ----------
+    mov rax, [rbx + 0x40]    ; ConOut
+    mov rcx, rax             ; RCX = ConOut
+    mov rax, [rax + 0x08]    ; OutputString
+    lea rdx, [open_ok]
+
+    sub rsp, 0x28
+    call rax
+    add rsp, 0x28
+    ret
+open_f:
+    mov rax, [rbx + 0x40]
+    mov rcx, rax
+    mov rax, [rax + 0x08]
+    lea rdx, [open_fail]
+
+    sub rsp, 0x28
+    call rax
+    add rsp, 0x28
+    ret
+
+    
+
     
