@@ -136,36 +136,9 @@ efi_main:
     call rax
     ; Remove 32 bytes shadow space
     add rsp, 0x20
-    ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
-    ; Print BOOTLOADER OK
-    mov rcx, [rbx + 64]        ; ConOut
-    mov rax, [rcx + 8]        ; OutputString
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov r10, rcx
-    lea rdx, [boot_msg]          ; UTF-16 string
-
-    sub rsp, 0x20
-    call rax
-    add rsp, 0x20
-    ; -------------------------------------------------------------------------------------------------------------
     
     ; r14 = contents of SimpleFileSystemProtocol
     mov r14, [SimpleFileSystemProtocol]
-
-    ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
-    ; Print BOOTLOADER OK
-    mov rcx, [rbx + 64]        ; ConOut
-    mov rax, [rcx + 8]        ; OutputString
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov r10, rcx
-    lea rdx, [boot_msg]          ; UTF-16 string
-
-    sub rsp, 0x20
-    call rax
-    add rsp, 0x20
-    ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 03 - Give me the Root Directory - Open Volume ======
 
@@ -212,8 +185,23 @@ efi_main:
     ; Load the file protocol pointer (this is the opened kernel.bin handle)
     mov r14, [KernelFile]
 
-    
-     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; ====== STEP 05 - Get File Info ======
+
+    ; Load the GetInfo function pointer into rax
+    mov rax, [r14 + 0x40]
+
+    ; GetInfo(This, &FileInfoGUID, &FileInfoBufferSize, &FileInfoBuffer)
+    mov rcx, r14
+    lea rdx, [FileInfoGUID]
+    lea r8, [FileInfoBufferSize]
+    lea r9, [FileInfoBuffer]
+
+    ; Function Call Convention
+    sub rsp, 0x20
+    call rax
+    add rsp, 0x20
+
+       ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
     ; Print BOOTLOADER OK
     mov rcx, [rbx + 64]        ; ConOut
     mov rax, [rcx + 8]        ; OutputString
@@ -226,21 +214,6 @@ efi_main:
     call rax
     add rsp, 0x20
     ; -------------------------------------------------------------------------------------------------------------
-
-    ; ====== STEP 05 - Get File Info ======
-
-    ; Load the GetInfo function pointer into rax
-    mov rax, [r14 + 0x40]
-    ; GetInfo(This, &FileInfoGUID, &FileInfoBufferSize, &FileInfoBuffer)
-    mov rcx, r14
-    lea rdx, [FileInfoGUID]
-    lea r8, [FileInfoBufferSize]
-    lea r9, [FileInfoBuffer]
-
-    ; Function Call Convention
-    sub rsp, 0x20
-    call rax
-    add rsp, 0x20
 
     ; Loading kernel file size into rax
     mov rax, [FileInfoBuffer + 0x30]
