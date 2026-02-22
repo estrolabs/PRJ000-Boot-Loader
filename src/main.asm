@@ -60,15 +60,18 @@ KernelSize dq 0
 
 boot_msg: dw 'B','O','O','T','L','O','A','D','E','R',' ','O','K',13,10,0
 
+test_ptr dq 0
+msg_bs_ok:  dw 'B','S',' ','O','K',13,10,0
+msg_bs_bad: dw 'B','S',' ','B','A','D',13,10,0
+
 ; Section text just means this section of assembly code will be loaded into the text section of memory.
 ; Code is loaded into memory and executed instructio by instruction to us its line by line but in memory its just a long list of data.
 section .text
 
 ; Entry Point efi_main is what first runs when we run our executable program.
 efi_main:
-
+    
     ; ====== Store Important Data ======
-
     ; r13 = ImageHandle
     mov r13, rcx
 
@@ -79,12 +82,25 @@ efi_main:
     ; I need the boot services pointer to perform other steps
 
     ; r12 = SystemTable->BootServices
-    mov r12, [rbx + 0x68]
+    mov r12, [rbx + 0x60]
 
     ; ====== STEP 01 - Find out which device my kernel.bin file is - HandleProtocol ======
     ; I can do this via the boot services pointer
 
-   
+    
+     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
+    ; -------------------------------------------------------------------------------------------------------------
     
     ; Function Call
 
@@ -99,11 +115,11 @@ efi_main:
     lea r8, [LoadedImageProtocol]
 
     ; Add 32 bytes shadow space
-    sub rsp, 32
+    sub rsp, 0x28
     ; Calls HandleProtocol function
     call rax
     ; Remove 32 bytes shadow space
-    add rsp, 32
+    add rsp, 0x28
 
     ; r14 = LoadedImageProtocol
     mov r14, [LoadedImageProtocol]
@@ -118,19 +134,6 @@ efi_main:
     ; - open files
     ; - read files
 
-     ; TEMP OUTPUT TEST
-    ; Print BOOTLOADER OK
-    mov rcx, [rbx + 64]        ; ConOut
-    mov rax, [rcx + 8]        ; OutputString
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov r10, rcx
-    lea rdx, [boot_msg]          ; UTF-16 string
-
-    sub rsp, 32
-    call rax
-    add rsp, 32
-
     ; rcx = DeviceInstance/DeviceHandle
     mov rcx, r15
     ; Load address of GUID
@@ -139,11 +142,11 @@ efi_main:
     lea r8, [SimpleFileSystemProtocol]
 
     ; Add 32 bytes of shadow space
-    sub rsp, 32
+    sub rsp, 0x28
     ; Call HandleProtocol Function
     call rax
     ; Remove 32 bytes shadow space
-    add rsp, 32
+    add rsp, 0x28
 
     ; r14 = contents of SimpleFileSystemProtocol
     mov r14, [SimpleFileSystemProtocol]
@@ -193,6 +196,21 @@ efi_main:
     ; Load the file protocol pointer (this is the opened kernel.bin handle)
     mov r14, [KernelFile]
 
+    
+     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
+    ; -------------------------------------------------------------------------------------------------------------
+
     ; ====== STEP 05 - Get File Info ======
 
     ; Load the GetInfo function pointer into rax
@@ -213,6 +231,21 @@ efi_main:
     ; Storing the kernel file size in KernelSize
     mov [KernelSize], rax
 
+    
+     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
+    ; -------------------------------------------------------------------------------------------------------------
+
     ; ====== STEP 06 - Allocate Memory for kernel.bin ======
 
     ; rax = AllocatePool Function Pointer
@@ -228,6 +261,21 @@ efi_main:
     sub rsp, 32
     call rax
     add rsp, 32
+
+
+     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
+    ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 07 - Read bytes from the file into memory ======
 
@@ -247,7 +295,19 @@ efi_main:
     call rax
     add rsp, 32
 
-    
+     ; TEMP OUTPUT TEST -----------------------------------------------------------------------------------------
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
+    ; -------------------------------------------------------------------------------------------------------------
 
     ; ====== STEP 08 - Jump into the file and execute the code ======
     
@@ -255,7 +315,7 @@ efi_main:
     mov rdi, rbx
 
     mov rax, [KernelBuffer]
-    ; jmp rax
+    jmp rax
 
     ; rax is the 64 bit return value register in the x86_64 calling convention used by UEFI.
     ; UEFI expects your entry function to return an EFI_STATUS.
@@ -273,6 +333,6 @@ efi_main:
     ; using ret just says return which means it returns the value in rax to the caller which is UEFI firmware loader.
     ret
 
-; .hang:
-;     jmp .hang
+.hang:
+    jmp .hang
     
