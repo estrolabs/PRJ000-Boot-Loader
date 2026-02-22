@@ -27,11 +27,24 @@ efi_main:
     ; This line of code is the standard fastest way to set a register to 0
     ; This line of code basically says use rax as the return to UEFI register and return 0 which is success.
     ; But this line does not actually return it just puts success (0) in the rax register which is used by UEFI for return values.
-    xor rax, rax
+    ; xor rax, rax
     ; returns from the current function to the caller.
     ; In this case the caller is UEFI firmware - specifically the UEFI loader that invoked your application entry.
     ; It uses the return address taht was pushed on the stack when UEFI called efi_main.
     ; Since rax is already 0, the firmware recieves EFI_SUCCESS
     ; using ret just says return which means it returns the value in rax to the caller which is UEFI firmware loader.
-    ret
+    ; ret
+
+    ; RDX = EFI_SYSTEM_TABLE*
+    ; BootServices pointer is at offset 96 (0x60) in EFI_SYSTEM_TABLE on x64
+    mov     rbx, [rdx + 96]        ; rbx = SystemTable->BootServices
+
+    ; Stall is a function in BootServices.
+    ; In the UEFI table, Stall is after RaiseTPL and RestoreTPL:
+    ; RaiseTPL (0), RestoreTPL (8), AllocatePages (16), ... (many) ..., Stall.
+    ; To avoid guessing offsets by hand, we will NOT do Stall yet in this step.
+    ; For now, just loop forever so it's obvious you got control.
+
+    .hang:
+        jmp     .hang
     
