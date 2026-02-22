@@ -75,19 +75,6 @@ efi_main:
     ; rbx = SystemTable
     mov rbx, rdx
 
-    ; TEMP OUTPUT TEST
-    ; Print BOOTLOADER OK
-    mov rcx, [rbx + 64]        ; ConOut
-    mov rax, [rcx + 8]        ; OutputString
-    ; arg1 = ConOut (This)
-    ; First argument = protocol pointer
-    mov r10, rcx
-    lea rdx, [boot_msg]          ; UTF-16 string
-
-    sub rsp, 32
-    call rax
-    add rsp, 32
-
     ; ====== STEP 00 - Get the boot service pointer - BootServices ======
     ; I need the boot services pointer to perform other steps
 
@@ -96,6 +83,8 @@ efi_main:
 
     ; ====== STEP 01 - Find out which device my kernel.bin file is - HandleProtocol ======
     ; I can do this via the boot services pointer
+
+   
     
     ; Function Call
 
@@ -128,6 +117,19 @@ efi_main:
     ; - open the root directory
     ; - open files
     ; - read files
+
+     ; TEMP OUTPUT TEST
+    ; Print BOOTLOADER OK
+    mov rcx, [rbx + 64]        ; ConOut
+    mov rax, [rcx + 8]        ; OutputString
+    ; arg1 = ConOut (This)
+    ; First argument = protocol pointer
+    mov r10, rcx
+    lea rdx, [boot_msg]          ; UTF-16 string
+
+    sub rsp, 32
+    call rax
+    add rsp, 32
 
     ; rcx = DeviceInstance/DeviceHandle
     mov rcx, r15
@@ -244,6 +246,8 @@ efi_main:
     sub rsp, 32
     call rax
     add rsp, 32
+
+    
 
     ; ====== STEP 08 - Jump into the file and execute the code ======
     
