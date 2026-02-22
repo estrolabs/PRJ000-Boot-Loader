@@ -60,13 +60,16 @@ efi_main:
     ; This line of code is the standard fastest way to set a register to 0
     ; This line of code basically says use rax as the return to UEFI register and return 0 which is success.
     ; But this line does not actually return it just puts success (0) in the rax register which is used by UEFI for return values.
-    xor rax, rax
+    ; xor rax, rax
     ; Restore the original rbx value
-    pop rbx
+    ; pop rbx
     ; returns from the current function to the caller.
     ; In this case the caller is UEFI firmware - specifically the UEFI loader that invoked your application entry.
     ; It uses the return address taht was pushed on the stack when UEFI called efi_main.
     ; Since rax is already 0, the firmware recieves EFI_SUCCESS
     ; using ret just says return which means it returns the value in rax to the caller which is UEFI firmware loader.
-    ret
+    ; ret
+
+.hang:
+    jmp .hang
     
